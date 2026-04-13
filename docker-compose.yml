@@ -10,3 +10,24 @@ services:
       - ./app:/app
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - SECRET_KEY="WLXp3zobe6o3oc3FsBWL6Sb6vckVvrBhTBAYHoVkYKLZ4AAr6jWrKDFKUYKfWrS7AkD57hE99osdx9i7"
+      - DB_HOST=db
+      - DB_NAME=devdb
+      - DB_USER=devuser
+      - DB_PASSWORD=change_me
+    depends_on:
+      - db
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: devdb
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: change_me
+
+volumes:
+  dev-db-data:
