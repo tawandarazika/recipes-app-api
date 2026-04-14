@@ -15,6 +15,6 @@ class ModelTests(TestCase):
         """Test creating a new user with an email is successful."""
         email = "test@example.com"
         password = "testpass123"
-        user = User.objects.create_user(username=email, email=email, password=password)
+        user = User.objects.create_user(email=email, password=password)  # type: ignore
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
