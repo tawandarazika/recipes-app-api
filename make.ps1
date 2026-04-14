@@ -42,6 +42,7 @@ param(
     'startproject',
     'runserver',
     'test',
+    'waitmigrate',
     'makemigrations',
     'migrate',
     'showmigrations',
@@ -299,6 +300,10 @@ switch ($Target) {
     Invoke-DockerApp "python manage.py test$extra"
   }
 
+  'waitmigrate' {
+    Invoke-DockerApp 'python manage.py wait_for_db ; python manage.py migrate'
+  }
+
   'makemigrations' {
     $extra = if ($Rest.Count -gt 0) { " " + ($Rest -join ' ') } else { '' }
     Invoke-DockerApp "python manage.py makemigrations$extra"
@@ -399,6 +404,7 @@ Targets:
   shell
   dbshell
   test [labels...]
+  waitmigrate              (wait_for_db then migrate)
   makemigrations [app...]
   migrate [args...]
   showmigrations [app...]
@@ -441,6 +447,7 @@ Examples:
   .\make.ps1 shell
   .\make.ps1 dbshell
   .\make.ps1 test
+  .\make.ps1 waitmigrate
   .\make.ps1 makemigrations
   .\make.ps1 migrate
   .\make.ps1 showmigrations

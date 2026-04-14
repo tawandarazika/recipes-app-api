@@ -46,6 +46,7 @@ Both call into the same Docker-based workflow.
 .\make.ps1 shell
 .\make.ps1 dbshell
 .\make.ps1 test
+.\make.ps1 waitmigrate
 .\make.ps1 makemigrations
 .\make.ps1 migrate
 .\make.ps1 showmigrations
