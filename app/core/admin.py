@@ -30,7 +30,28 @@ class UserAdmin(BaseUserAdmin):
         ),
         (_("Important dates"), {"fields": ("last_login",)}),
     )
+    # fmt: off
     readonly_fields = ("last_login",)
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "password1",
+                    "password2",
+                    "first_name",
+                    "last_name",
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+
+                ),
+            },
+        ),
+    )
+    # fmt: on
 
 
 admin.site.register(User, UserAdmin)

@@ -19,10 +19,16 @@ class AdminSiteTests(TestCase):
     def setUp(self):
         """Create user and client."""
         self.client = Client()
-        self.admin_user = User.objects.create_superuser(email="admin@example.com", password="adminpass123")  # type: ignore
+        self.admin_user = User.objects.create_superuser(
+            email="admin@example.com",
+            password="adminpass123",
+        )  # type: ignore
         self.client.force_login(self.admin_user)
         self.user = User.objects.create_user(
-            email="user@example.com", password="userpass123", first_name="Test", last_name="User"
+            email="user@example.com",
+            password="userpass123",
+            first_name="Test",
+            last_name="User",
         )  # type: ignore
 
     def test_users_listed(self):
@@ -37,6 +43,13 @@ class AdminSiteTests(TestCase):
     def test_edit_user_page(self):
         """Test that the user edit page works."""
         url = reverse("admin:core_user_change", args=[self.user.id])
+        result = self.client.get(url)
+
+        self.assertEqual(result.status_code, 200)
+
+    def test_create_user_page(self):
+        """Test that the create user page works."""
+        url = reverse("admin:core_user_add")
         result = self.client.get(url)
 
         self.assertEqual(result.status_code, 200)
