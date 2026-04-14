@@ -37,6 +37,7 @@ param(
     'prune-global',
     'prune-global-force',
     'nuke',
+    'pycache',
     'flake8',
     'startproject',
     'runserver',
@@ -54,6 +55,7 @@ param(
     'changepassword',
     'createsuperuser',
     'startapp',
+    'cleanm',
     'manage',
     'help'
   )]
@@ -135,6 +137,47 @@ function Remove-AllVolumes {
     return
   }
   Invoke-DockerCli (@('volume', 'rm') + $volumes)
+}
+
+function Clear-Migrations {
+  param([string]$AppName)
+
+  if (-not $AppName) {
+    $AppName = 'core'
+  }
+
+  $migrationsPath = Join-Path $PSScriptRoot (Join-Path 'app' (Join-Path $AppName 'migrations'))
+  if (-not (Test-Path $migrationsPath)) {
+    throw "Migrations folder not found: $migrationsPath"
+  }
+
+  Get-ChildItem -Path $migrationsPath -File |
+  Where-Object { $_.Name -ne '__init__.py' } |
+  Remove-Item -Force
+
+  Write-Host "Cleared migration files in $migrationsPath" -ForegroundColor Yellow
+  Invoke-DockerApp "python manage.py makemigrations $AppName"
+}
+
+function Clear-PyCache {
+  $roots = @(
+    $PSScriptRoot,
+    (Join-Path $PSScriptRoot 'app')
+  )
+
+  foreach ($root in $roots) {
+    if (-not (Test-Path $root)) {
+      continue
+    }
+
+    Get-ChildItem -Path $root -Recurse -Directory -Force -Filter '__pycache__' |
+    Remove-Item -Recurse -Force
+
+    Get-ChildItem -Path $root -Recurse -File -Force -Include '*.pyc', '*.pyo' |
+    Remove-Item -Force
+  }
+
+  Write-Host 'Cleared Python cache files (__pycache__, .pyc, .pyo).' -ForegroundColor Yellow
 }
 
 switch ($Target) {
@@ -225,6 +268,10 @@ switch ($Target) {
     Remove-AllVolumes
   }
 
+  'pycache' {
+    Clear-PyCache
+  }
+
   'flake8' {
     Invoke-DockerApp 'flake8'
   }
@@ -312,6 +359,11 @@ switch ($Target) {
     Invoke-DockerApp "python manage.py startapp $appName"
   }
 
+  'cleanm' {
+    $appName = if ($Name) { $Name } elseif ($Rest.Count -ge 1) { $Rest[0] } else { 'core' }
+    Clear-Migrations -AppName $appName
+  }
+
   'manage' {
     if ($Rest.Count -eq 0) {
       throw 'Usage: .\make.ps1 manage <manage.py args...>'
@@ -340,6 +392,7 @@ Targets:
   prune-global [args...]   (docker system prune -a --volumes)
   prune-global-force [args...] (docker system prune -a --volumes -f)
   nuke                     (stop-all -> rm-all -> rmi-all -> rm-volumes)
+  pycache                  (remove __pycache__ folders and .pyc/.pyo files)
   flake8
   startproject [name]      (default: app)
   runserver [addr:port]    (default: 0.0.0.0:8000)
@@ -357,6 +410,7 @@ Targets:
   createsuperuser
   changepassword <username>
   startapp [name]          (default: core)
+  cleanm [app]             (delete migration files and remake them)
   manage <args...>         (pass-through to python manage.py)
 
 Examples:
@@ -380,6 +434,7 @@ Examples:
   .\make.ps1 prune-global
   .\make.ps1 prune-global-force
   .\make.ps1 nuke
+  .\make.ps1 pycache
   .\make.ps1 flake8
   .\make.ps1 startproject app
   .\make.ps1 runserver
@@ -395,6 +450,7 @@ Examples:
   .\make.ps1 createsuperuser
   .\make.ps1 changepassword admin
   .\make.ps1 startapp core
+  .\make.ps1 cleanm core
   .\make.ps1 manage shell
 '@
   }

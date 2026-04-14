@@ -1,0 +1,7 @@
+{
+  "include": [
+    "app"
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false
+}
